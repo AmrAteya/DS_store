@@ -6,6 +6,7 @@
 
 <script>
 import moment from "moment";
+import Axios from "axios";
 import { use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { LineChart } from "echarts/charts";
@@ -35,39 +36,12 @@ export default {
 
   data() {
     return {
-      chartData: [
-        {
-          date_ms: 1641772800000,
-          performance: 0.2,
-        },
-        {
-          date_ms: 1641859200000,
-          performance: 0.33,
-        },
-        {
-          date_ms: 1641945600000,
-          performance: 0.53,
-        },
-        {
-          date_ms: 1642032000000,
-          performance: 0.31,
-        },
-        {
-          date_ms: 1642118400000,
-          performance: 0.65,
-        },
-        {
-          date_ms: 1642204800000,
-          performance: 0.88,
-        },
-        {
-          date_ms: 1642291200000,
-          performance: 0.07,
-        },
-      ],
+      chartData: []
     };
   },
-
+  created() {
+    this.getDataFromApi();
+  },
   computed: {
     initOptions() {
       return {
@@ -115,6 +89,44 @@ export default {
           axisTick: { show: true },
           splitLine: { show: true },
         },
+        visualMap: {
+          top: 50,
+          right: 10,
+          pieces: [
+          {
+            gt: 0,
+            lte: 50,
+            color: 'red'
+          },
+          {
+            gt: 50,
+            lte: 80,
+            color: 'yellow'
+          },
+          {
+            gt: 80,
+            lte: 100,
+            color: 'green'
+          },
+        ],
+        outOfRange: {
+          color: '#999'
+        }
+        },
+        tooltip: {
+          trigger: "axis",
+          backgroundColor: '#16253F',
+          textStyle: {
+            fontSize: 12,
+            color: 'white'
+          },
+          formatter: (params) => {
+            return `
+              <div style="font-weight: bold; text-align: center; font-size: 14px; padding: 0; margin: 0">${params[0].axisValue}</div> 
+              <div> ${params[0].marker} Team performance index: ${params[0].value} %</div>
+            `
+          },
+        },
         series: [
           {
             data: this.yAxisData,
@@ -125,7 +137,7 @@ export default {
             lineStyle: {
               width: 2,
             },
-          },
+          }
         ],
       };
     },
@@ -142,6 +154,15 @@ export default {
   methods: {
     formatDate(dateInMs) {
       return moment(dateInMs).format("DD MMM YYYY");
+    },
+    getDataFromApi() {
+      Axios.get("https://fe-task.getsandbox.com/performance")
+        .then((response) => {
+          this.chartData = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
   },
 };
